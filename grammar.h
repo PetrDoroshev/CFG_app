@@ -73,7 +73,7 @@ void Grammar::remove_non_productive_chars() {
 
     while (!q.empty()) { 
 
-        for (int rule_num: concerned_rules[q.back() - 'A']){
+        for (auto& rule_num: concerned_rules[q.front() - 'A']){
             counter[rule_num]--; 
 
             if (counter[rule_num] == 0) {
@@ -85,18 +85,21 @@ void Grammar::remove_non_productive_chars() {
     }  
 
     for (auto it = rules.begin(); it != rules.end();) {
-        
+        std::cout << it->first << std::endl;
         if (!is_generating[it->first - 'A']) {
             it = rules.erase(it); 
             continue;
         }
       
-        for (int i = 0; i < it->second.size(); i++) {
+        for (int i = 0; i < it->second.size(); ) {
             for (auto& c: it->second[i]){
                 if (!is_terminal(c) & !is_generating[c - 'A']){
                     it->second.erase(it->second.begin() + i);
+                    i--;
+                    break;
                 }
-            }   
+            } 
+            i++; 
         }
         it++;   
     }
