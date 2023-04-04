@@ -18,6 +18,7 @@ private:
     
     bool is_terminal(char c);
     void remove_non_productive_chars();
+    void remove_unreachable_chars();
 
 
 public:
@@ -63,7 +64,7 @@ void Grammar::remove_non_productive_chars() {
                     concerned_rules[c - 'A'].push_back(rule_num);
                 }
             }
-            if (counter[rule_num] == 0) {
+            if (counter[rule_num] == 0 && !is_generating[rule.first - 'A']) {
                 q.push(rule.first);
                 is_generating[rule.first - 'A'] = true;
             }
@@ -76,7 +77,7 @@ void Grammar::remove_non_productive_chars() {
         for (auto& rule_num: concerned_rules[q.front() - 'A']){
             counter[rule_num]--; 
 
-            if (counter[rule_num] == 0) {
+            if (counter[rule_num] == 0 && !is_generating[nonterm_lst[rule_num] - 'A']) {
                 q.push(nonterm_lst[rule_num]);
                 is_generating[nonterm_lst[rule_num] - 'A'] = true;
             }
@@ -85,7 +86,6 @@ void Grammar::remove_non_productive_chars() {
     }  
 
     for (auto it = rules.begin(); it != rules.end();) {
-        std::cout << it->first << std::endl;
         if (!is_generating[it->first - 'A']) {
             it = rules.erase(it); 
             continue;
@@ -106,8 +106,39 @@ void Grammar::remove_non_productive_chars() {
 
 }
 
+void Grammar::remove_unreachable_chars() {
+    
+    bool is_reachable[26] = { false };
+    std::queue<char> q;
+
+    q.push(start_char);
+    is_reachable[start_char - 'A'] = true;
+    
+    while (!q.empty()) {
+        for (auto& rule: rules[q.front()]) {
+            for (auto& c: rule) {
+                if (!is_terminal(c) && !is_reachable[c - 'A']){
+                    q.push(c);
+                    is_reachable[c - 'A'] = true;
+                    
+                }
+            }
+        }
+        q.pop();
+    }
+
+    std::cout << "Достижимые символы: " << std::endl;
+
+    for (int i = 0; i < 26; i++){
+        if (is_reachable[i])
+            std::cout << (char)(i + 'A') << std::endl;
+    }
+    std::cout << std::endl;
+}
+
 void Grammar::simplify() {
     remove_non_productive_chars();
+    remove_unreachable_chars();
 }
 
 void Grammar::set_start_char(char sc){
